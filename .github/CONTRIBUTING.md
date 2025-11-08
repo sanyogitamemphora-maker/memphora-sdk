@@ -6,15 +6,15 @@ Thank you for your interest in contributing to Memphora SDK! We welcome contribu
 
 ### Reporting Bugs
 
-If you find a bug, please create an issue using the [Bug Report template](https://github.com/sanyogitamemphora-maker/memphora-sdk/issues/new?template=bug_report.md).
+If you find a bug, please create an issue using the [Bug Report template](https://github.com/Memphora/memphora-sdk/issues/new?template=bug_report.md).
 
 ### Suggesting Features
 
-Have an idea for a new feature? Use the [Feature Request template](https://github.com/sanyogitamemphora-maker/memphora-sdk/issues/new?template=feature_request.md).
+Have an idea for a new feature? Use the [Feature Request template](https://github.com/Memphora/memphora-sdk/issues/new?template=feature_request.md).
 
 ### Asking Questions
 
-For questions or support, use the [Question template](https://github.com/sanyogitamemphora-maker/memphora-sdk/issues/new?template=question.md) or check our [documentation](https://memphora.ai/docs).
+For questions or support, use the [Question template](https://github.com/Memphora/memphora-sdk/issues/new?template=question.md) or check our [documentation](https://memphora.ai/docs).
 
 ## Development Setup
 
