@@ -18,8 +18,8 @@ setup(
     project_urls={
         "Homepage": "https://memphora.ai",
         "Documentation": "https://memphora.ai/docs",
-        "Source": "https://github.com/memphora/memphora-sdk",
-        "Issues": "https://github.com/memphora/memphora-sdk/issues",
+        "Source": "https://github.com/sanyogitamemphora-maker/memphora-sdk",
+        "Issues": "https://github.com/sanyogitamemphora-maker/memphora-sdk/issues",
     },
     packages=find_packages(where="."),
     py_modules=["memphora_sdk", "memory_client"],

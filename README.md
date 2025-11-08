@@ -335,7 +335,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Documentation
 
 - **Documentation:** [https://memphora.ai/docs](https://memphora.ai/docs)
-- **Issues:** [GitHub Issues](https://github.com/memphora/memphora/issues)
+- **Issues:** [GitHub Issues](https://github.com/sanyogitamemphora-maker/memphora-sdk/issues)
 
 ## 🌟 Features in Detail
 

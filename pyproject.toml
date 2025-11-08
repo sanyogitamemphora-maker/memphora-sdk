@@ -44,8 +44,8 @@ dev = [
 [project.urls]
 Homepage = "https://memphora.ai"
 Documentation = "https://memphora.ai/docs"
-Repository = "https://github.com/memphora/memphora-sdk"
-Issues = "https://github.com/memphora/memphora-sdk/issues"
+Repository = "https://github.com/sanyogitamemphora-maker/memphora-sdk"
+Issues = "https://github.com/sanyogitamemphora-maker/memphora-sdk/issues"
 
 [tool.setuptools]
 py-modules = ["memphora_sdk", "memory_client"]
