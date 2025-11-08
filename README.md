@@ -323,8 +323,8 @@ pip install memphora
 ### From Source
 
 ```bash
-git clone https://github.com/memphora/memphora.git
-cd memphora/sdk
+git clone https://github.com/sanyogitamemphora-maker/memphora-sdk.git
+cd memphora-sdk
 pip install -e .
 ```
 
