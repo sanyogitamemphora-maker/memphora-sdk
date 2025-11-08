@@ -340,8 +340,6 @@ Contributions are welcome! Please see our [Contributing Guide](https://github.co
 
 - **Documentation:** [https://memphora.ai/docs](https://memphora.ai/docs)
 - **Issues:** [GitHub Issues](https://github.com/memphora/memphora/issues)
-- **Email:** support@memphora.ai
-- **Discord:** [Join our community](https://discord.gg/memphora)
 
 ## 🌟 Features in Detail
 
