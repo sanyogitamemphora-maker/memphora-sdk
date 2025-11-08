@@ -1,0 +1,9 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://memphora.ai/docs
+  - name: Community Support
+    url: https://github.com/sanyogitamemphora-maker/memphora-sdk/discussions
+  - name: Email Support
+    url: mailto:support@memphora.ai
+
