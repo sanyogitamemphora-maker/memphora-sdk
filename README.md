@@ -332,16 +332,10 @@ pip install -e .
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## 🤝 Contributing
-
-Contributions are welcome! Please see our [Contributing Guide](https://github.com/memphora/memphora/blob/main/CONTRIBUTING.md) for details.
-
-## 📞 Support
+## Documentation
 
 - **Documentation:** [https://memphora.ai/docs](https://memphora.ai/docs)
 - **Issues:** [GitHub Issues](https://github.com/memphora/memphora/issues)
-- **Email:** support@memphora.ai
-- **Discord:** [Join our community](https://discord.gg/memphora)
 
 ## 🌟 Features in Detail
 
