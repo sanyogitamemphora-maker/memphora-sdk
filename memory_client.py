@@ -109,26 +109,43 @@ class MemoryClient:
         self,
         user_id: str,
         query: str,
-        limit: int = 5
+        limit: int = 5,
+        rerank: bool = False,
+        rerank_provider: str = "auto",
+        cohere_api_key: Optional[str] = None,
+        jina_api_key: Optional[str] = None
     ) -> List[Dict]:
         """
-        Search memories semantically.
+        Search memories semantically with optional external reranking.
         
         Args:
             user_id: ID of the user
             query: Search query
             limit: Maximum number of results
+            rerank: Enable external reranking (Cohere/Jina) for better relevance
+            rerank_provider: Reranking provider ("cohere", "jina", or "auto")
+            cohere_api_key: Optional Cohere API key (if not configured on backend)
+            jina_api_key: Optional Jina AI API key (if not configured on backend)
         
         Returns:
             List of matching memory dictionaries
         """
+        payload = {
+            "user_id": user_id,
+            "query": query,
+            "limit": limit,
+            "rerank": rerank,
+            "rerank_provider": rerank_provider
+        }
+        
+        if cohere_api_key:
+            payload["cohere_api_key"] = cohere_api_key
+        if jina_api_key:
+            payload["jina_api_key"] = jina_api_key
+        
         response = self.session.post(
             f"{self.base_url}/memories/search",
-            json={
-                "user_id": user_id,
-                "query": query,
-                "limit": limit
-            }
+            json=payload
         )
         response.raise_for_status()
         return response.json()

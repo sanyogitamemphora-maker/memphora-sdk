@@ -174,13 +174,38 @@ class Memphora:
             except:
                 return {}
     
-    def search(self, query: str, limit: int = 10) -> List[Dict]:
-        """Search memories."""
+    def search(
+        self,
+        query: str,
+        limit: int = 10,
+        rerank: bool = False,
+        rerank_provider: str = "auto",
+        cohere_api_key: Optional[str] = None,
+        jina_api_key: Optional[str] = None
+    ) -> List[Dict]:
+        """
+        Search memories with optional external reranking.
+        
+        Args:
+            query: Search query
+            limit: Maximum number of results
+            rerank: Enable external reranking (Cohere/Jina) for better relevance
+            rerank_provider: Reranking provider ("cohere", "jina", or "auto")
+            cohere_api_key: Optional Cohere API key (if not configured on backend)
+            jina_api_key: Optional Jina AI API key (if not configured on backend)
+        
+        Returns:
+            List of matching memory dictionaries
+        """
         try:
             return self.client.search_memories(
                 user_id=self.user_id,
                 query=query,
-                limit=limit
+                limit=limit,
+                rerank=rerank,
+                rerank_provider=rerank_provider,
+                cohere_api_key=cohere_api_key,
+                jina_api_key=jina_api_key
             )
         except Exception as e:
             logger.error(f"Failed to search memories: {e}")
@@ -428,6 +453,427 @@ class Memphora:
         except Exception as e:
             logger.error(f"Failed to get related memories: {e}")
             return []
+    
+    # Advanced Search Methods
+    def search_advanced(
+        self,
+        query: str,
+        limit: int = 5,
+        filters: Optional[Dict] = None,
+        include_related: bool = False,
+        min_score: float = 0.0,
+        sort_by: str = "relevance"
+    ) -> List[Dict]:
+        """Advanced search with filtering and scoring."""
+        try:
+            return self.client.search_advanced(
+                user_id=self.user_id,
+                query=query,
+                limit=limit,
+                filters=filters or {},
+                include_related=include_related,
+                min_score=min_score,
+                sort_by=sort_by
+            )
+        except Exception as e:
+            logger.error(f"Failed to search advanced: {e}")
+            return []
+    
+    def search_optimized(
+        self,
+        query: str,
+        max_tokens: int = 2000,
+        max_memories: int = 20,
+        use_compression: bool = True,
+        use_cache: bool = True
+    ) -> Dict:
+        """Optimized search for better performance."""
+        try:
+            return self.client.search_optimized(
+                user_id=self.user_id,
+                query=query,
+                max_tokens=max_tokens,
+                max_memories=max_memories,
+                use_compression=use_compression,
+                use_cache=use_cache
+            )
+        except Exception as e:
+            logger.error(f"Failed to search optimized: {e}")
+            return {}
+    
+    def search_enhanced(
+        self,
+        query: str,
+        max_tokens: int = 1500,
+        max_memories: int = 15,
+        use_compression: bool = True
+    ) -> Dict:
+        """Enhanced search with maximum performance."""
+        try:
+            return self.client.search_enhanced(
+                user_id=self.user_id,
+                query=query,
+                max_tokens=max_tokens,
+                max_memories=max_memories,
+                use_compression=use_compression
+            )
+        except Exception as e:
+            logger.error(f"Failed to search enhanced: {e}")
+            return {}
+    
+    # Batch Operations
+    def batch_store(
+        self,
+        memories: List[Dict[str, str]],
+        link_related: bool = True
+    ) -> List[Dict]:
+        """Batch create multiple memories."""
+        try:
+            return self.client.batch_create(
+                user_id=self.user_id,
+                memories=memories,
+                link_related=link_related
+            )
+        except Exception as e:
+            logger.error(f"Failed to batch store: {e}")
+            return []
+    
+    # Memory Operations
+    def merge(
+        self,
+        memory_ids: List[str],
+        strategy: str = "combine"
+    ) -> Dict:
+        """Merge multiple memories."""
+        try:
+            return self.client.merge_memories(
+                memory_ids=memory_ids,
+                merge_strategy=strategy
+            )
+        except Exception as e:
+            logger.error(f"Failed to merge memories: {e}")
+            return {}
+    
+    def find_contradictions(
+        self,
+        memory_id: str,
+        threshold: float = 0.7
+    ) -> List[Dict]:
+        """Find potentially contradictory memories."""
+        try:
+            return self.client.find_contradictions(
+                memory_id=memory_id,
+                similarity_threshold=threshold
+            )
+        except Exception as e:
+            logger.error(f"Failed to find contradictions: {e}")
+            return []
+    
+    def get_context_for_memory(
+        self,
+        memory_id: str,
+        depth: int = 2
+    ) -> Dict:
+        """Get full context around a memory."""
+        try:
+            return self.client.get_memory_context(
+                memory_id=memory_id,
+                depth=depth
+            )
+        except Exception as e:
+            logger.error(f"Failed to get context for memory: {e}")
+            return {}
+    
+    # Statistics
+    def get_statistics(self) -> Dict:
+        """Get user's memory statistics and insights."""
+        try:
+            return self.client.get_user_statistics(self.user_id)
+        except Exception as e:
+            logger.error(f"Failed to get statistics: {e}")
+            return {}
+    
+    # Conversation Management
+    def record_conversation(
+        self,
+        conversation: List[Dict[str, str]],
+        platform: Optional[str] = None,
+        metadata: Optional[Dict] = None
+    ) -> Dict:
+        """Record a full conversation."""
+        try:
+            return self.client.record_conversation(
+                user_id=self.user_id,
+                conversation=conversation,
+                platform=platform or "unknown",
+                metadata=metadata or {}
+            )
+        except Exception as e:
+            logger.error(f"Failed to record conversation: {e}")
+            return {}
+    
+    def get_conversations(
+        self,
+        platform: Optional[str] = None,
+        limit: int = 50
+    ) -> List[Dict]:
+        """Get user conversations."""
+        try:
+            return self.client.get_user_conversations(
+                user_id=self.user_id,
+                platform=platform,
+                limit=limit
+            )
+        except Exception as e:
+            logger.error(f"Failed to get conversations: {e}")
+            return []
+    
+    def summarize_conversation(
+        self,
+        conversation: List[Dict[str, str]],
+        summary_type: str = "brief"
+    ) -> Dict:
+        """Summarize a conversation."""
+        try:
+            return self.client.summarize_conversation(
+                conversation=conversation,
+                summary_type=summary_type
+            )
+        except Exception as e:
+            logger.error(f"Failed to summarize conversation: {e}")
+            return {}
+    
+    # Image Operations
+    def store_image(
+        self,
+        image_url: Optional[str] = None,
+        image_base64: Optional[str] = None,
+        description: Optional[str] = None,
+        metadata: Optional[Dict] = None
+    ) -> Dict:
+        """Store an image memory."""
+        try:
+            return self.client.store_image(
+                user_id=self.user_id,
+                image_url=image_url,
+                image_base64=image_base64,
+                description=description,
+                metadata=metadata or {}
+            )
+        except Exception as e:
+            logger.error(f"Failed to store image: {e}")
+            return {}
+    
+    def search_images(
+        self,
+        query: str,
+        limit: int = 5
+    ) -> List[Dict]:
+        """Search image memories."""
+        try:
+            return self.client.search_images(
+                user_id=self.user_id,
+                query=query,
+                limit=limit
+            )
+        except Exception as e:
+            logger.error(f"Failed to search images: {e}")
+            return []
+    
+    # Version Control
+    def get_versions(
+        self,
+        memory_id: str,
+        limit: int = 50
+    ) -> List[Dict]:
+        """Get memory versions."""
+        try:
+            return self.client.get_memory_versions(
+                memory_id=memory_id,
+                limit=limit
+            )
+        except Exception as e:
+            logger.error(f"Failed to get versions: {e}")
+            return []
+    
+    def rollback(
+        self,
+        memory_id: str,
+        target_version: int
+    ) -> Dict:
+        """Rollback memory to a version."""
+        try:
+            return self.client.rollback_memory(
+                memory_id=memory_id,
+                target_version=target_version,
+                user_id=self.user_id
+            )
+        except Exception as e:
+            logger.error(f"Failed to rollback: {e}")
+            return {}
+    
+    # Advanced Memory Operations (continued)
+    def link(
+        self,
+        memory_id: str,
+        target_id: str,
+        relationship_type: str = "related"
+    ) -> Dict:
+        """Link two memories in the graph."""
+        try:
+            return self.client.link_memories(
+                memory_id=memory_id,
+                target_id=target_id,
+                relationship_type=relationship_type
+            )
+        except Exception as e:
+            logger.error(f"Failed to link memories: {e}")
+            return {}
+    
+    def find_path(
+        self,
+        source_id: str,
+        target_id: str
+    ) -> Dict:
+        """Find shortest path between two memories in the graph."""
+        try:
+            return self.client.find_memory_path(
+                source_id=source_id,
+                target_id=target_id
+            )
+        except Exception as e:
+            logger.error(f"Failed to find path: {e}")
+            return {}
+    
+    # Advanced Search Context Methods
+    def get_optimized_context(
+        self,
+        query: str,
+        max_tokens: int = 2000,
+        max_memories: int = 20,
+        use_compression: bool = True,
+        use_cache: bool = True
+    ) -> str:
+        """Get optimized context for a query (returns formatted string)."""
+        try:
+            result = self.search_optimized(
+                query=query,
+                max_tokens=max_tokens,
+                max_memories=max_memories,
+                use_compression=use_compression,
+                use_cache=use_cache
+            )
+            return result.get('context', '')
+        except Exception as e:
+            logger.error(f"Failed to get optimized context: {e}")
+            return ''
+    
+    def get_enhanced_context(
+        self,
+        query: str,
+        max_tokens: int = 1500,
+        max_memories: int = 15,
+        use_compression: bool = True
+    ) -> str:
+        """Get enhanced context for a query (returns formatted string)."""
+        try:
+            result = self.search_enhanced(
+                query=query,
+                max_tokens=max_tokens,
+                max_memories=max_memories,
+                use_compression=use_compression
+            )
+            return result.get('context', '')
+        except Exception as e:
+            logger.error(f"Failed to get enhanced context: {e}")
+            return ''
+    
+    # Version Control (continued)
+    def compare_versions(
+        self,
+        version_id_1: str,
+        version_id_2: str
+    ) -> Dict:
+        """Compare two versions of a memory."""
+        try:
+            return self.client.compare_versions(
+                version_id_1=version_id_1,
+                version_id_2=version_id_2
+            )
+        except Exception as e:
+            logger.error(f"Failed to compare versions: {e}")
+            return {}
+    
+    # Export/Import
+    def export(
+        self,
+        format: str = "json"
+    ) -> Dict:
+        """Export all memories."""
+        try:
+            return self.client.export_memories(
+                user_id=self.user_id,
+                format=format
+            )
+        except Exception as e:
+            logger.error(f"Failed to export: {e}")
+            return {}
+    
+    def import_memories(
+        self,
+        data: str,
+        format: str = "json"
+    ) -> Dict:
+        """Import memories."""
+        try:
+            return self.client.import_memories(
+                user_id=self.user_id,
+                data=data,
+                format=format
+            )
+        except Exception as e:
+            logger.error(f"Failed to import: {e}")
+            return {}
+    
+    # Image Operations (continued)
+    def upload_image(
+        self,
+        image_data: bytes,
+        filename: str,
+        metadata: Optional[Dict] = None
+    ) -> Dict:
+        """Upload an image from bytes data."""
+        try:
+            return self.client.upload_image(
+                user_id=self.user_id,
+                image_data=image_data,
+                filename=filename,
+                metadata=metadata or {}
+            )
+        except Exception as e:
+            logger.error(f"Failed to upload image: {e}")
+            return {}
+    
+    # Text Processing
+    def concise(
+        self,
+        text: str
+    ) -> Dict:
+        """Make text more concise."""
+        try:
+            return self.client.concise_text(text=text)
+        except Exception as e:
+            logger.error(f"Failed to concise text: {e}")
+            return {}
+    
+    # Health Check
+    def health(self) -> Dict:
+        """Check API health."""
+        try:
+            return self.client.health_check()
+        except Exception as e:
+            logger.error(f"Failed to check health: {e}")
+            return {}
     
     # Delegate all other methods to client
     def __getattr__(self, name):
