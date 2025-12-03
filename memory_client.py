@@ -143,12 +143,15 @@ class MemoryClient:
         if jina_api_key:
             payload["jina_api_key"] = jina_api_key
         
-        response = self.session.post(
-            f"{self.base_url}/memories/search",
-            json=payload
-        )
+        url = f"{self.base_url}/memories/search"
+        import logging
+        logging.getLogger(__name__).debug(f"MemoryClient.search_memories: POST {url} with user_id={user_id}, query={query[:50] if query else ''}")
+        response = self.session.post(url, json=payload)
+        logging.getLogger(__name__).debug(f"MemoryClient.search_memories: status={response.status_code}, response_len={len(response.text)}")
         response.raise_for_status()
-        return response.json()
+        result = response.json()
+        logging.getLogger(__name__).debug(f"MemoryClient.search_memories: returned {len(result) if isinstance(result, list) else 'non-list'} items")
+        return result
     
     def update_memory(
         self,
@@ -1006,10 +1009,9 @@ class MemoryClient:
         Returns:
             List of matching image memories
         """
-        # user_id, query, and limit are sent as query parameters, not JSON body
         response = self.session.post(
             f"{self.base_url}/memories/image/search",
-            params={"user_id": user_id, "query": query, "limit": limit}
+            json={"user_id": user_id, "query": query, "limit": limit}
         )
         response.raise_for_status()
         return response.json()

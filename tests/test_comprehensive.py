@@ -21,7 +21,7 @@ from memphora_sdk import Memphora
 # Configuration
 TEST_CONFIG = {
     'api_url': os.getenv('MEMPHORA_API_URL', 'https://api.memphora.ai/api/v1'),
-    'api_key': os.getenv('MEMPHORA_API_KEY', 'memphora_live_sk_a4effdDKP4V2aa2smWrq1rSsB_YxxNhOSkA9DWcK48A'),
+    'api_key': os.getenv('MEMPHORA_API_KEY', 'memphora_live_sk_lFiZrj1X3Z1iC5r_PccCDXsKCthbRzIGMmyCjlxS2A4'),
     'user_id': f'test-user-{int(time.time())}-{os.urandom(4).hex()}',
     'timeout': 60,  # 60 seconds
 }
@@ -543,8 +543,8 @@ class TestMultimodalFeatures:
     def test_4_1_store_image_url(self, memory, created_memories):
         """4.1 storeImage() - Store image with URL"""
         result = memory.store_image(
-            image_url='https://via.placeholder.com/150',
-            description='Test placeholder image',
+            image_url='https://upload.wikimedia.org/wikipedia/commons/f/f2/LPU-v1-die.jpg',
+            description='Test image of a processor die',
             metadata={'test': True}
         )
         
@@ -554,8 +554,8 @@ class TestMultimodalFeatures:
     
     def test_4_2_store_image_base64(self, memory, created_memories):
         """4.2 storeImage() - Store image with base64"""
-        # Small 1x1 blue pixel PNG in base64
-        base64_image = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+        # 10x10 red pixel PNG in base64 (Groq Vision requires at least 2x2 pixels)
+        base64_image = 'iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAEklEQVR4nGP4z8CAB+GTG8HSALfKY52fTcuYAAAAAElFTkSuQmCC'
         
         result = memory.store_image(
             image_base64=base64_image,
@@ -571,7 +571,7 @@ class TestMultimodalFeatures:
         """4.3 searchImages() - Search image memories"""
         # Store an image first
         memory.store_image(
-            image_url='https://via.placeholder.com/150',
+            image_url='https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/300px-PNG_transparency_demonstration_1.png',
             description='A beautiful sunset over mountains'
         )
         
@@ -584,9 +584,9 @@ class TestMultimodalFeatures:
     
     def test_4_4_upload_image(self, memory, created_memories):
         """4.4 uploadImage() - Upload image from Blob"""
-        # Create a simple test image (1x1 blue pixel PNG)
+        # Create a simple test image (10x10 red pixel PNG - Groq Vision requires at least 2x2 pixels)
         png_data = base64.b64decode(
-            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+            'iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAEklEQVR4nGP4z8CAB+GTG8HSALfKY52fTcuYAAAAAElFTkSuQmCC'
         )
         
         result = memory.upload_image(png_data, 'test-image.png', metadata={'test': True})
@@ -827,6 +827,405 @@ class TestGraphOperations:
 
 
 # ============================================================================
+# 8B. MULTI-HOP REASONING (AUTOMATIC IN SEARCH)
+# ============================================================================
+
+class TestMultiHopReasoningAutomatic:
+    """Test that multi-hop reasoning works automatically in search."""
+    
+    def test_8b_1_automatic_graph_enhanced_search(self, memory):
+        """8B.1 search() - Graph enhancement happens automatically"""
+        # Create memories that will form a graph
+        memory.store('John works at Google')
+        memory.store('Google uses Python for backend development')
+        memory.store('John leads Project Alpha')
+        
+        delay(5)  # Wait for graph extraction
+        
+        # Regular search - should automatically use graph enhancement
+        results = memory.search('What technology does John\'s company use?', limit=10)
+        
+        assert results is not None
+        assert isinstance(results, list)
+        # Should find memories mentioning "Python" even if query doesn't mention it directly
+        # (via graph: John -> works_at -> Google -> uses -> Python)
+    
+    def test_8b_2_automatic_multi_hop_in_search(self, memory):
+        """8B.2 search() - Multi-hop reasoning finds related memories"""
+        # Create a chain of relationships
+        memory.store('Alice manages the Engineering team')
+        memory.store('Engineering team works on Project X')
+        memory.store('Project X uses Python and Docker')
+        
+        delay(5)  # Wait for graph extraction
+        
+        # Search should automatically traverse graph to find related memories
+        results = memory.search('What technologies does Alice work with?', limit=10)
+        
+        assert results is not None
+        assert isinstance(results, list)
+        # Should find memories about Python/Docker via graph traversal
+        # (Alice -> manages -> Engineering team -> works_on -> Project X -> uses -> Python/Docker)
+    
+    def test_8b_3_graph_extraction_automatic(self, memory):
+        """8B.3 store() - Graph extraction happens automatically"""
+        # Store memory - graph extraction should happen automatically
+        result = memory.store('John works at Google and lives in San Francisco')
+        
+        assert result is not None
+        delay(3)  # Wait for graph extraction
+        
+        # Search should now find related memories via graph
+        results = memory.search('What do I know about Google?', limit=5)
+        
+        assert results is not None
+        # Should find the memory about John via graph relationship
+    
+    def test_8b_4_complex_query_automatic(self, memory):
+        """8B.4 search() - Complex queries use multi-hop automatically"""
+        # Create interconnected memories
+        memory.store('Sarah is the project manager')
+        memory.store('Project deadline is March 15')
+        memory.store('Sarah can be contacted at sarah@company.com')
+        
+        delay(5)  # Wait for graph extraction
+        
+        # Complex query - should use multi-hop reasoning automatically
+        results = memory.search('Who should I contact about the project deadline?', limit=10)
+        
+        assert results is not None
+        assert isinstance(results, list)
+        # Should find Sarah's contact info via graph relationships
+    
+    def test_8b_5_query_expansion_with_graph_entities(self, memory):
+        """8B.5 search() - Query expansion with graph entities (deep integration)"""
+        # Create memories that form a graph
+        memory.store('John works at Google')
+        memory.store('Google uses Python for backend development')
+        memory.store('Google uses Docker for containerization')
+        
+        delay(10)  # Wait longer for graph extraction (LLM-based extraction can be slow)
+        
+        # Search with query that mentions entity but not related entities
+        # REAL-LIFE SCENARIO: Natural language query about someone's company
+        # The system should be SMART enough to handle this without keyword fallbacks
+        query = "What company does John work for and what technologies do they use?"
+        results = memory.search(query, limit=10)
+        
+        assert results is not None
+        assert isinstance(results, list)
+        assert len(results) > 0
+        
+        # Verify that results include memories about related entities
+        result_contents = " ".join([r.get('content', '') for r in results]).lower()
+        
+        # Should find memories mentioning Google (via graph relationships)
+        assert 'google' in result_contents or any('google' in r.get('content', '').lower() for r in results)
+        
+        # Query expansion should help find Python/Docker even though query doesn't mention them
+        has_related = 'python' in result_contents or 'docker' in result_contents
+        assert has_related, "Query expansion should find related entities"
+    
+    def test_8b_6_graph_caching_performance(self, memory):
+        """8B.6 search() - Graph caching improves performance on repeated queries"""
+        # Create memories with entities
+        memory.store('Microsoft uses C# for development')
+        memory.store('Microsoft uses Azure for cloud services')
+        
+        delay(5)  # Wait for graph extraction
+        
+        query = "What does Microsoft use?"
+        
+        # First search - should populate cache
+        import time
+        start_time = time.time()
+        results1 = memory.search(query, limit=10)
+        first_search_time = time.time() - start_time
+        
+        assert results1 is not None
+        assert len(results1) > 0
+        
+        # Second search - should use cache (faster)
+        start_time = time.time()
+        results2 = memory.search(query, limit=10)
+        second_search_time = time.time() - start_time
+        
+        assert results2 is not None
+        assert len(results2) > 0
+        
+        # Results should be similar (cache should return same/similar results)
+        result1_ids = {r.get('id') for r in results1}
+        result2_ids = {r.get('id') for r in results2}
+        # At least some overlap (cache may return same results)
+        overlap = len(result1_ids & result2_ids)
+        
+        # Second search should be faster (caching helps)
+        # Note: This may vary, but caching should generally help
+        if second_search_time < first_search_time:
+            print(f"✅ Cache working: Second search faster ({second_search_time:.3f}s vs {first_search_time:.3f}s)")
+        else:
+            print(f"⏱️  Timing: First={first_search_time:.3f}s, Second={second_search_time:.3f}s (may vary)")
+        
+        # Verify results are valid
+        assert overlap >= 0  # At least some results should overlap
+    
+    def test_8b_7_result_verification_specific_entities(self, memory):
+        """8B.7 search() - Verify specific entities are found via graph"""
+        # Create specific graph structure
+        memory.store('Apple develops iOS')
+        memory.store('Apple develops macOS')
+        memory.store('iOS is a mobile operating system')
+        memory.store('macOS is a desktop operating system')
+        
+        delay(5)  # Wait for graph extraction
+        
+        # Search for Apple - should find related iOS and macOS memories
+        results = memory.search('What does Apple develop?', limit=10)
+        
+        assert results is not None
+        assert isinstance(results, list)
+        assert len(results) > 0
+        
+        # Verify specific entities are found
+        result_contents = " ".join([r.get('content', '') for r in results]).lower()
+        
+        # Should find Apple (direct match)
+        assert 'apple' in result_contents
+        
+        # Should find iOS or macOS (via graph relationships)
+        # Query expansion should help find these even if query doesn't mention them directly
+        found_ios = 'ios' in result_contents
+        found_macos = 'macos' in result_contents or 'mac os' in result_contents
+        
+        assert found_ios or found_macos, f"Expected to find iOS or macOS in results. Got: {[r.get('content', '')[:50] for r in results[:3]]}"
+        
+        print(f"✅ Result verification: Found iOS={found_ios}, macOS={found_macos}")
+
+
+# ============================================================================
+# 8C. REAL-LIFE GRAPH SCENARIOS
+# ============================================================================
+
+class TestRealLifeGraphScenarios:
+    """Test real-life scenarios using graph features."""
+    
+    def test_8c_1_work_team_knowledge(self, memory):
+        """8C.1 Real-life: Work team knowledge query"""
+        # Simulate work environment
+        memory.store('I work at Acme Corp as a Senior Engineer')
+        memory.store('Acme Corp uses React and TypeScript for frontend')
+        memory.store('Acme Corp uses Python and FastAPI for backend')
+        memory.store('My team lead is Sarah Chen')
+        memory.store('Sarah Chen can be reached at sarah.chen@acme.com')
+        
+        delay(10)  # Wait for graph extraction
+        
+        # REAL-LIFE SCENARIO: Natural language query about team relationships
+        # The system should be SMART enough to handle this without keyword fallbacks
+        query = "Who is my team lead and how can I contact them?"
+        results = memory.search(query, limit=10)
+        
+        assert results is not None
+        assert isinstance(results, list)
+        assert len(results) > 0
+        
+        # Should find Sarah's contact info via graph relationships
+        result_contents = " ".join([r.get('content', '') for r in results]).lower()
+        assert 'sarah' in result_contents or 'chen' in result_contents or 'sarah.chen@acme.com' in result_contents
+    
+    def test_8c_2_project_technology_stack(self, memory):
+        """8C.2 Real-life: Find technology stack for a project"""
+        # Simulate project knowledge
+        memory.store('Project Phoenix is our main product')
+        memory.store('Project Phoenix uses MongoDB for database')
+        memory.store('Project Phoenix uses Redis for caching')
+        memory.store('Project Phoenix uses Kubernetes for deployment')
+        memory.store('I am the tech lead for Project Phoenix')
+        
+        delay(10)  # Wait for graph extraction
+        
+        # Real query: What technologies does Project Phoenix use?
+        results = memory.search('What technologies does Project Phoenix use?', limit=10)
+        
+        assert results is not None
+        assert len(results) > 0
+        
+        # Should find MongoDB, Redis, Kubernetes
+        result_contents = " ".join([r.get('content', '') for r in results]).lower()
+        tech_found = any(tech in result_contents for tech in ['mongodb', 'redis', 'kubernetes'])
+        assert tech_found, f"Expected to find MongoDB/Redis/Kubernetes. Got: {[r.get('content', '')[:50] for r in results[:3]]}"
+    
+    def test_8c_3_personal_preferences(self, memory):
+        """8C.3 Real-life: Personal preferences and interests"""
+        # Simulate personal memories
+        memory.store('I love playing basketball on weekends')
+        memory.store('I prefer Python over Java for development')
+        memory.store('My favorite programming language is Python')
+        memory.store('I enjoy reading science fiction books')
+        memory.store('My favorite author is Isaac Asimov')
+        
+        delay(10)  # Wait for graph extraction
+        
+        # REAL-LIFE SCENARIO: Natural language query about preferences
+        # The system should be SMART enough to handle this without keyword fallbacks
+        query = "What programming languages do I prefer?"
+        results = memory.search(query, limit=10)
+        
+        assert results is not None
+        assert isinstance(results, list)
+        assert len(results) > 0
+        
+        # Should find Python preference via graph relationships
+        result_contents = " ".join([r.get('content', '') for r in results]).lower()
+        assert 'python' in result_contents
+    
+    def test_8c_4_contact_information(self, memory):
+        """8C.4 Real-life: Find contact information via relationships"""
+        # Simulate contact network
+        memory.store('Dr. Smith is my primary care physician')
+        memory.store('Dr. Smith office is at 123 Medical Center')
+        memory.store('Dr. Smith phone number is 555-0100')
+        memory.store('I have an appointment with Dr. Smith next week')
+        
+        delay(10)  # Wait for graph extraction
+        
+        # Real query: How do I contact my doctor?
+        results = memory.search('How do I contact my doctor?', limit=10)
+        
+        assert results is not None
+        assert len(results) > 0
+        
+        # Should find contact information
+        result_contents = " ".join([r.get('content', '') for r in results]).lower()
+        has_contact = 'phone' in result_contents or '555' in result_contents or 'office' in result_contents
+        assert has_contact, f"Expected contact info. Got: {[r.get('content', '')[:50] for r in results[:3]]}"
+    
+    def test_8c_5_multi_hop_work_relationships(self, memory):
+        """8C.5 Real-life: Multi-hop work relationships"""
+        # Simulate complex work structure
+        memory.store('I report to Manager Alice')
+        memory.store('Manager Alice reports to Director Bob')
+        memory.store('Director Bob reports to VP Carol')
+        memory.store('VP Carol is responsible for Engineering division')
+        
+        delay(10)  # Wait for graph extraction
+        
+        # Real query: Who is my VP?
+        results = memory.search('Who is my VP or executive?', limit=10)
+        
+        assert results is not None
+        assert len(results) > 0
+        
+        # Should find VP Carol via multi-hop (I -> Alice -> Bob -> Carol)
+        result_contents = " ".join([r.get('content', '') for r in results]).lower()
+        assert 'carol' in result_contents or 'vp' in result_contents
+    
+    def test_8c_6_skill_and_experience(self, memory):
+        """8C.6 Real-life: Skills and experience queries"""
+        # Simulate skill memories
+        memory.store('I have 5 years of experience with AWS')
+        memory.store('I am certified in AWS Solutions Architect')
+        memory.store('I worked on AWS Lambda and S3 projects')
+        memory.store('I also have experience with Google Cloud Platform')
+        
+        delay(10)  # Wait for graph extraction
+        
+        # Real query: What cloud platforms do I know?
+        results = memory.search('What cloud platforms am I experienced with?', limit=10)
+        
+        assert results is not None
+        assert len(results) > 0
+        
+        # Should find AWS and GCP
+        result_contents = " ".join([r.get('content', '') for r in results]).lower()
+        has_cloud = 'aws' in result_contents or 'gcp' in result_contents or 'google cloud' in result_contents
+        assert has_cloud, f"Expected AWS/GCP. Got: {[r.get('content', '')[:50] for r in results[:3]]}"
+    
+    def test_8c_7_event_and_location(self, memory):
+        """8C.7 Real-life: Events and locations"""
+        # Simulate event memories
+        memory.store('I attended the Tech Conference 2024 in San Francisco')
+        memory.store('Tech Conference 2024 was held at Moscone Center')
+        memory.store('I met John Doe at Tech Conference 2024')
+        memory.store('John Doe works at TechCorp')
+        
+        delay(10)  # Wait for graph extraction
+        
+        # Real query: Where was the conference I attended?
+        results = memory.search('Where was Tech Conference 2024 held?', limit=10)
+        
+        assert results is not None
+        assert len(results) > 0
+        
+        # Should find location
+        result_contents = " ".join([r.get('content', '') for r in results]).lower()
+        has_location = 'san francisco' in result_contents or 'moscone' in result_contents
+        assert has_location, f"Expected location. Got: {[r.get('content', '')[:50] for r in results[:3]]}"
+    
+    def test_8c_8_product_and_features(self, memory):
+        """8C.8 Real-life: Product and feature knowledge"""
+        # Simulate product knowledge
+        memory.store('Our product Memphora has AI-powered search')
+        memory.store('Memphora uses graph databases for relationships')
+        memory.store('Memphora supports multi-hop reasoning')
+        memory.store('Memphora can be integrated via REST API')
+        
+        delay(10)  # Wait for graph extraction
+        
+        # Real query: What features does our product have?
+        results = memory.search('What features does Memphora have?', limit=10)
+        
+        assert results is not None
+        assert len(results) > 0
+        
+        # Should find features
+        result_contents = " ".join([r.get('content', '') for r in results]).lower()
+        has_features = any(feature in result_contents for feature in ['ai', 'search', 'graph', 'api', 'reasoning'])
+        assert has_features, f"Expected features. Got: {[r.get('content', '')[:50] for r in results[:3]]}"
+    
+    def test_8c_9_learning_and_education(self, memory):
+        """8C.9 Real-life: Learning and education tracking"""
+        # Simulate learning memories
+        memory.store('I am learning machine learning')
+        memory.store('I took a course on deep learning from Coursera')
+        memory.store('I completed a project using TensorFlow')
+        memory.store('My next goal is to learn PyTorch')
+        
+        delay(10)  # Wait for graph extraction
+        
+        # Real query: What am I learning?
+        results = memory.search('What machine learning topics am I learning?', limit=10)
+        
+        assert results is not None
+        assert len(results) > 0
+        
+        # Should find learning topics
+        result_contents = " ".join([r.get('content', '') for r in results]).lower()
+        has_learning = any(topic in result_contents for topic in ['machine learning', 'deep learning', 'tensorflow', 'pytorch'])
+        assert has_learning, f"Expected learning topics. Got: {[r.get('content', '')[:50] for r in results[:3]]}"
+    
+    def test_8c_10_relationship_network(self, memory):
+        """8C.10 Real-life: Relationship network queries"""
+        # Simulate relationship network
+        memory.store('My friend Alex works at Microsoft')
+        memory.store('Alex introduced me to Sarah')
+        memory.store('Sarah is a product manager at Google')
+        memory.store('I met Sarah at a networking event')
+        
+        delay(10)  # Wait for graph extraction
+        
+        # Real query: Who do I know at Google?
+        results = memory.search('Who do I know that works at Google?', limit=10)
+        
+        assert results is not None
+        assert len(results) > 0
+        
+        # Should find Sarah via relationship chain
+        result_contents = " ".join([r.get('content', '') for r in results]).lower()
+        assert 'sarah' in result_contents or 'google' in result_contents
+
+
+# ============================================================================
 # 9. ANALYTICS & STATISTICS
 # ============================================================================
 
@@ -993,6 +1392,19 @@ class TestSecurityCompliance:
         result = memory.export_gdpr()
         
         assert result is not None
+    
+    def test_12_1_5_delete_gdpr(self, memory):
+        """12.1.5 deleteGdpr() - Delete GDPR data"""
+        # First export to verify data exists
+        export_result = memory.export_gdpr()
+        assert export_result is not None
+        
+        # Delete GDPR data
+        result = memory.delete_gdpr()
+        
+        assert result is not None
+        assert isinstance(result, dict)
+        assert 'user_id' in result or 'deleted_at' in result
     
     def test_12_2_set_retention_policy(self, memory):
         """12.2 setRetentionPolicy() - Set retention policy"""

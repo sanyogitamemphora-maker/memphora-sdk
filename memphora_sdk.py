@@ -111,11 +111,13 @@ class Memphora:
     def get_context(self, query: str, limit: int = 5) -> str:
         """Get relevant context for a query."""
         try:
+            logger.debug(f"SDK get_context: user_id={self.user_id}, query={query[:50]}, base_url={self.client.base_url}")
             memories = self.client.search_memories(
                 user_id=self.user_id,
                 query=query,
                 limit=limit
             )
+            logger.debug(f"SDK get_context: got {len(memories) if memories else 0} memories")
             
             if not memories:
                 return ""
@@ -271,7 +273,7 @@ class Memphora:
             # Return empty dict for backward compatibility with tests that expect dict on 404
             error_msg = str(e)
             if "404" in error_msg or (hasattr(e, 'response') and hasattr(e.response, 'status_code') and e.response.status_code == 404):
-            return {}
+                return {}
             # For other errors, log and re-raise
             logger.error(f"Failed to get conversation: {e}")
             raise
