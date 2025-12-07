@@ -21,7 +21,7 @@ from memphora_sdk import Memphora
 # Configuration
 TEST_CONFIG = {
     'api_url': os.getenv('MEMPHORA_API_URL', 'https://api.memphora.ai/api/v1'),
-    'api_key': os.getenv('MEMPHORA_API_KEY', 'memphora_live_sk_lFiZrj1X3Z1iC5r_PccCDXsKCthbRzIGMmyCjlxS2A4'),
+    'api_key': os.getenv('MEMPHORA_API_KEY', 'memphora_live_sk_k_-OukwYwpvt2D3PVNycEHyBkG16eCBKRbc-ReHuBeY'),
     'user_id': f'test-user-{int(time.time())}-{os.urandom(4).hex()}',
     'timeout': 60,  # 60 seconds
 }
